@@ -1,4 +1,4 @@
-# Base image
+# Base image - Evaluate
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 
@@ -15,13 +15,14 @@ COPY pyproject.toml pyproject.toml
 COPY README.md README.md
 COPY src/ src/
 COPY data/ data/
+COPY models/ models/
 
 # Add this to speed up file copying on some systems
 ENV UV_LINK_MODE=copy
 
 WORKDIR /
 
-# Replace your old RUN uv sync with this one:
+# Replace your old RUN uv sync with this one so we dont have to install torch this is faster:
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-cache --no-install-project
 
@@ -30,4 +31,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 #WORKDIR /
 #RUN uv sync --locked --no-cache --no-install-project
 
-ENTRYPOINT ["uv", "run", "src/ml_ops_ex/train.py"]
+ENTRYPOINT ["uv", "run", "src/ml_ops_ex/evaluate.py"]

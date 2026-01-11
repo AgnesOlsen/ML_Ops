@@ -2,9 +2,9 @@ name: "Code linting"
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, workflowtest ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, workflowtest ]
 
 jobs:
   format:

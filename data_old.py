@@ -1,8 +1,8 @@
 from __future__ import annotations
-#Data is stored in .pt files which can be loaded using torch.load . We iterate over the files, load them and concatenate them into a single tensor. In particular, we have highlighted the use of .unsqueeze function. Convolutional neural networks (which we propose as a solution) need the data to be in the shape [N, C, H, W] where N is the number of samples, C is the number of channels, H is the height of the image and W is the width of the image. The dataset is stored in the shape [N, H, W] and therefore we need to add a channel.
+# Data is stored in .pt files which can be loaded using torch.load . We iterate over the files, load them and concatenate them into a single tensor. In particular, we have highlighted the use of .unsqueeze function. Convolutional neural networks (which we propose as a solution) need the data to be in the shape [N, C, H, W] where N is the number of samples, C is the number of channels, H is the height of the image and W is the width of the image. The dataset is stored in the shape [N, H, W] and therefore we need to add a channel.
 
-#We have additionally in the solution added functionality for plotting the images together with the labels for inspection. Remember: all good machine learning starts with a good understanding of the data.
-    
+# We have additionally in the solution added functionality for plotting the images together with the labels for inspection. Remember: all good machine learning starts with a good understanding of the data.
+
 import matplotlib.pyplot as plt  # only needed for plotting
 import torch
 from mpl_toolkits.axes_grid1 import ImageGrid  # only needed for plotting

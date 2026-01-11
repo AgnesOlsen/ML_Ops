@@ -29,4 +29,3 @@ def evaluate(model_checkpoint: str = "models/model.pth") -> None:
 
 if __name__ == "__main__":
     typer.run(evaluate)
-

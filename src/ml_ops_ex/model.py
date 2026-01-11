@@ -1,7 +1,8 @@
 import torch
 from torch import nn
 
-#The provided solution implements a convolutional neural network with 3 convolutional layers and a single fully connected layer. Because the MNIST dataset consists of images, we want an architecture that can take advantage of the spatial information in the images.#
+# The provided solution implements a convolutional neural network with 3 convolutional layers and a single fully connected layer. Because the MNIST dataset consists of images, we want an architecture that can take advantage of the spatial information in the images.#
+
 
 class MyAwesomeModel(nn.Module):
     """My awesome model."""
@@ -16,9 +17,9 @@ class MyAwesomeModel(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if x.ndim != 4:
-            raise ValueError('Expected input to a 4D tensor')
+            raise ValueError("Expected input to a 4D tensor")
         if x.shape[1] != 1 or x.shape[2] != 28 or x.shape[3] != 28:
-            raise ValueError('Expected each sample to have shape [1, 28, 28]')
+            raise ValueError("Expected each sample to have shape [1, 28, 28]")
         """Forward pass."""
         x = torch.relu(self.conv1(x))
         x = torch.max_pool2d(x, 2, 2)

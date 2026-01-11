@@ -1,7 +1,8 @@
 import torch
 from torch import nn
 
-#The provided solution implements a convolutional neural network with 3 convolutional layers and a single fully connected layer. Because the MNIST dataset consists of images, we want an architecture that can take advantage of the spatial information in the images.#
+# The provided solution implements a convolutional neural network with 3 convolutional layers and a single fully connected layer. Because the MNIST dataset consists of images, we want an architecture that can take advantage of the spatial information in the images.#
+
 
 class MyAwesomeModel(nn.Module):
     """My awesome model."""

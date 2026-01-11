@@ -1,21 +1,21 @@
 import matplotlib.pyplot as plt
 import torch
 import typer
-import os
 import wandb
 from data import corrupt_mnist
 from model import MyAwesomeModel
-from sklearn.metrics import RocCurveDisplay,accuracy_score, f1_score, precision_score, recall_score
+from sklearn.metrics import RocCurveDisplay, accuracy_score, f1_score, precision_score, recall_score
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+
 
 def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 5) -> None:
     """Train a model on MNIST."""
     print("Training day and night")
     print(f"{lr=}, {batch_size=}, {epochs=}")
     run = wandb.init(
-        project = "corrupt_mnist",
-        config = {"lr": lr, "batch_size": batch_size, "epochs": epochs},
+        project="corrupt_mnist",
+        config={"lr": lr, "batch_size": batch_size, "epochs": epochs},
     )
 
     model = MyAwesomeModel().to(DEVICE)
@@ -30,7 +30,7 @@ def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 5) -> None:
     for epoch in range(epochs):
         model.train()
 
-        preds, targets = [],[]
+        preds, targets = [], []
         for i, (img, target) in enumerate(train_dataloader):
             img, target = img.to(DEVICE), target.to(DEVICE)
             optimizer.zero_grad()
@@ -51,16 +51,16 @@ def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 5) -> None:
                 print(f"Epoch {epoch}, iter {i}, loss: {loss.item()}")
 
                 # add a plot of the input images
-                images = [wandb.Image(image, caption=f"Input image {j}") 
-                        for j, image in enumerate(img[:5].detach().cpu())]
+                images = [
+                    wandb.Image(image, caption=f"Input image {j}") for j, image in enumerate(img[:5].detach().cpu())
+                ]
                 images = [wandb.Image(image, normalize=True) for image in img[:5]]
                 wandb.log({"images": images})
 
                 # add a plot of histogram of the gradients
                 grads = torch.cat([p.grad.flatten() for p in model.parameters() if p.grad is not None], 0)
                 wandb.log({"gradients": wandb.Histogram(grads)})
-    
-    
+
         # add a custom matplotlib plot of the ROC curves
         preds = torch.cat(preds, 0)
         targets = torch.cat(targets, 0)
@@ -93,7 +93,6 @@ def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 5) -> None:
     fig.savefig("reports/figures/training_statistics.png")
     """
 
-    
     final_accuracy = accuracy_score(targets, preds.argmax(dim=1))
     final_precision = precision_score(targets, preds.argmax(dim=1), average="weighted")
     final_recall = recall_score(targets, preds.argmax(dim=1), average="weighted")
@@ -111,7 +110,5 @@ def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 5) -> None:
     run.log_artifact(artifact)
 
 
-
 if __name__ == "__main__":
     typer.run(train)
-

@@ -2,9 +2,9 @@ name: "Code linting"
 
 on:
   push:
-    branches: [ main, workflowtest ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, workflowtest ]
+    branches: [ main]
 
 jobs:
   format:
@@ -30,3 +30,6 @@ jobs:
 
       - name: ruff format
         run: uv run ruff format --check .
+
+      - name: mypy check
+        run: uv run mypy src/ml_ops_ex

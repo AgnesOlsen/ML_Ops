@@ -2,15 +2,21 @@ import matplotlib.pyplot as plt
 import torch
 import typer
 import os
+import wandb
 from data import corrupt_mnist
 from model import MyAwesomeModel
+from sklearn.metrics import RocCurveDisplay,accuracy_score, f1_score, precision_score, recall_score
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
-def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 10) -> None:
+def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 5) -> None:
     """Train a model on MNIST."""
     print("Training day and night")
     print(f"{lr=}, {batch_size=}, {epochs=}")
+    run = wandb.init(
+        project = "corrupt_mnist",
+        config = {"lr": lr, "batch_size": batch_size, "epochs": epochs},
+    )
 
     model = MyAwesomeModel().to(DEVICE)
     train_set, _ = corrupt_mnist()
@@ -23,6 +29,8 @@ def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 10) -> None:
     statistics = {"train_loss": [], "train_accuracy": []}
     for epoch in range(epochs):
         model.train()
+
+        preds, targets = [],[]
         for i, (img, target) in enumerate(train_dataloader):
             img, target = img.to(DEVICE), target.to(DEVICE)
             optimizer.zero_grad()
@@ -34,10 +42,45 @@ def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 10) -> None:
 
             accuracy = (y_pred.argmax(dim=1) == target).float().mean().item()
             statistics["train_accuracy"].append(accuracy)
+            wandb.log({"train_loss": loss.item(), "train_accuracy": accuracy})
+
+            preds.append(y_pred.detach().cpu())
+            targets.append(target.detach().cpu())
 
             if i % 100 == 0:
                 print(f"Epoch {epoch}, iter {i}, loss: {loss.item()}")
 
+                # add a plot of the input images
+                images = [wandb.Image(image, caption=f"Input image {j}") 
+                        for j, image in enumerate(img[:5].detach().cpu())]
+                images = [wandb.Image(image, normalize=True) for image in img[:5]]
+                wandb.log({"images": images})
+
+                # add a plot of histogram of the gradients
+                grads = torch.cat([p.grad.flatten() for p in model.parameters() if p.grad is not None], 0)
+                wandb.log({"gradients": wandb.Histogram(grads)})
+    
+    
+        # add a custom matplotlib plot of the ROC curves
+        preds = torch.cat(preds, 0)
+        targets = torch.cat(targets, 0)
+
+        for class_id in range(10):
+            one_hot = torch.zeros_like(targets)
+            one_hot[targets == class_id] = 1
+            _ = RocCurveDisplay.from_predictions(
+                one_hot,
+                preds[:, class_id],
+                name=f"ROC curve for {class_id}",
+                plot_chance_level=(class_id == 2),
+            )
+
+        # alternatively use wandb.log({"roc": wandb.Image(plt)}
+        # This logs the current figure as an image to your dashboard
+        wandb.log({"roc": wandb.Image(plt)})
+        plt.close()
+
+    """
     print("Training complete")
     os.makedirs("models", exist_ok=True)
     os.makedirs("reports/figures", exist_ok=True)
@@ -48,7 +91,27 @@ def train(lr: float = 1e-3, batch_size: int = 32, epochs: int = 10) -> None:
     axs[1].plot(statistics["train_accuracy"])
     axs[1].set_title("Train accuracy")
     fig.savefig("reports/figures/training_statistics.png")
+    """
+
+    
+    final_accuracy = accuracy_score(targets, preds.argmax(dim=1))
+    final_precision = precision_score(targets, preds.argmax(dim=1), average="weighted")
+    final_recall = recall_score(targets, preds.argmax(dim=1), average="weighted")
+    final_f1 = f1_score(targets, preds.argmax(dim=1), average="weighted")
+
+    # first we save the model to a file then log it as an artifact
+    torch.save(model.state_dict(), "model.pth")
+    artifact = wandb.Artifact(
+        name="corrupt_mnist_model",
+        type="model",
+        description="A model trained to classify corrupt MNIST images",
+        metadata={"accuracy": final_accuracy, "precision": final_precision, "recall": final_recall, "f1": final_f1},
+    )
+    artifact.add_file("model.pth")
+    run.log_artifact(artifact)
+
 
 
 if __name__ == "__main__":
     typer.run(train)
+

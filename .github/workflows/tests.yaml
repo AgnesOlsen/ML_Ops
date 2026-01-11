@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [ master, main ]
 
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -16,22 +15,18 @@ jobs:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
         python-version: ["3.10", "3.11", "3.12"]
 
-  steps:
-    - uses: actions/checkout@v5
-    - uses: astral-sh/setup-uv@v7
-      with:
-        python-version: 3.12
-        enable-cache: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup uv
-      uses: astral-sh/setup-uv@v7
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
 
-    - name: Install dependencies
-      run: |
-        uv sync --dev --locked
+      - name: Install dependencies
+        run: uv sync --dev --locked
 
-    - name: Test with pytest
-      run: |
-        uv run pytest -v
+      - name: Test with pytest
+        run: uv run pytest -v

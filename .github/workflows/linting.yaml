@@ -1,12 +1,10 @@
-name: Code linting
+name: "Code linting"
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   format:
@@ -17,23 +15,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
+          python-version: "3.12" # Fixed version since we don't need a matrix here
 
       - name: Install dependencies
         run: |
-          python -m pip install -U pip setuptools wheel
-          pip install -r requirements.txt
-          pip install -r requirements_dev.txt
-          pip list
+          uv sync --dev --locked
+          # This ensures ruff is available from your pyproject.toml
 
       - name: ruff check
-        run: |
-          ruff check .
+        run: uv run ruff check .
 
       - name: ruff format
-        run: |
-          ruff format .
+        run: uv run ruff format --check .
